@@ -1,0 +1,2 @@
+# The entrypoint runs inside a Linux image: it must stay LF even on Windows checkouts.
+entrypoint.sh text eol=lf

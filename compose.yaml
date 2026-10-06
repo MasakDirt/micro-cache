@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: micro_cache
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d micro_cache"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/micro_cache
+      TRANSFORMER_DELAY_SECONDS: "${TRANSFORMER_DELAY_SECONDS:-0.1}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
