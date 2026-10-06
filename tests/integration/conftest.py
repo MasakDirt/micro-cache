@@ -5,9 +5,14 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.app import create_app
+from api.dependencies import get_session, get_transformer
+from core.services.transformer import UpperCaseTransformer
 from core.settings import Settings
 from db.session import build_engine, build_session_factory
 
@@ -48,3 +53,22 @@ async def db_session(settings: Settings) -> AsyncIterator[AsyncSession]:
     async with engine.begin() as connection:
         await connection.execute(text("TRUNCATE transformed_strings, payloads"))
     await engine.dispose()
+
+
+@pytest.fixture
+def app(settings: Settings, db_session: AsyncSession, transformer: UpperCaseTransformer) -> FastAPI:
+    application = create_app(settings)
+
+    async def test_session() -> AsyncIterator[AsyncSession]:
+        yield db_session
+
+    application.dependency_overrides[get_session] = test_session
+    application.dependency_overrides[get_transformer] = lambda: transformer
+    return application
+
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client

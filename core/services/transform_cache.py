@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Sequence
 
 from core.exceptions import TransformerError
@@ -6,6 +7,8 @@ from core.repos.transformed_strings import TransformedStringRepository
 from core.services.hashing import HashingService
 from core.services.transformer import Transformer
 from db.models import TransformedString
+
+logger = logging.getLogger(__name__)
 
 
 class TransformCache:
@@ -28,7 +31,12 @@ class TransformCache:
         outputs = {text: cached[key] for text, key in keys.items() if key in cached}
         misses = [text for text in unique if text not in outputs]
 
-        transformed = await asyncio.gather(*(self._transform(text) for text in misses))
+        try:
+            transformed = await asyncio.gather(*(self._transform(text) for text in misses))
+        except Exception as error:
+            logger.exception("transformer failed")
+            raise TransformerError() from error
+
         await self._repo.add(
             [
                 TransformedString(
@@ -45,7 +53,4 @@ class TransformCache:
 
     async def _transform(self, text: str) -> str:
         async with self._semaphore:
-            try:
-                return await self._transformer.transform(text)
-            except Exception as error:
-                raise TransformerError() from error
+            return await self._transformer.transform(text)

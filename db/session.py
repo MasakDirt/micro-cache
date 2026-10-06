@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -20,6 +21,7 @@ def build_session_factory(engine: AsyncEngine) -> SessionFactory:
     return async_sessionmaker(engine, expire_on_commit=False)
 
 
+@asynccontextmanager
 async def open_session(factory: SessionFactory) -> AsyncIterator[AsyncSession]:
     async with factory() as session:
         try:
