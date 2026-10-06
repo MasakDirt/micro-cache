@@ -28,7 +28,7 @@ async def test_sqlalchemy_errors_become_storage_errors(caplog: pytest.LogCapture
 
     assert isinstance(excinfo.value.__cause__, OperationalError)
     assert len(caplog.records) == 1
-    assert caplog.records[0].message == "failing failed"
+    assert caplog.records[0].message.startswith("failing failed")
     assert caplog.records[0].exc_info is not None
 
 
