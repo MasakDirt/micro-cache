@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic_core import ErrorDetails
 
 from core.exceptions import (
     PayloadNotFoundError,
@@ -47,9 +48,9 @@ async def _unexpected_handler(request: Request, error: Exception) -> JSONRespons
     return _response(500, "Internal error")
 
 
-def _describe(item: dict[str, object]) -> str:
-    location = ".".join(str(part) for part in item["loc"][1:]) or str(item["loc"][0])  # type: ignore[index]
-    message = str(item["msg"]).removeprefix("Value error, ")
+def _describe(item: ErrorDetails) -> str:
+    location = ".".join(str(part) for part in item["loc"][1:]) or str(item["loc"][0])
+    message = item["msg"].removeprefix("Value error, ")
     return f"{location}: {message}"
 
 

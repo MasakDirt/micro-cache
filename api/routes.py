@@ -8,7 +8,7 @@ from api.dependencies import (
     TransformerDep,
     ValidPayloadRequest,
 )
-from core.schemas import ErrorResponse, PayloadCreated, PayloadRead, Stats
+from core.schemas import ErrorResponse, Health, PayloadCreated, PayloadRead, Stats
 
 router = APIRouter()
 
@@ -45,6 +45,6 @@ async def read_stats(transformer: TransformerDep) -> Stats:
 
 
 @router.get("/health", responses={503: ERROR})
-async def read_health(health: HealthRepositoryDep) -> dict[str, str]:
+async def read_health(health: HealthRepositoryDep) -> Health:
     await health.ping()
-    return {"status": "ok"}
+    return Health(status="ok")
