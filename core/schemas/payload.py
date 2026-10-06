@@ -24,6 +24,7 @@ class PayloadRequest(BaseModel):
 
 class PayloadCreated(BaseModel):
     id: UUID
+    created: bool
     message: str
 
 

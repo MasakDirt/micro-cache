@@ -1,7 +1,9 @@
+from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
-from core.schemas import ErrorResponse, PayloadRequest
+from core.schemas import ErrorResponse, PayloadCreated, PayloadRequest
 
 
 def test_valid_payload_passes() -> None:
@@ -38,6 +40,12 @@ def test_unknown_field_fails() -> None:
 def test_non_string_items_fail() -> None:
     with pytest.raises(ValidationError):
         PayloadRequest.model_validate({"list_1": [1], "list_2": ["b"]})
+
+
+def test_payload_created_carries_flag_and_message() -> None:
+    created = PayloadCreated(id=uuid4(), created=True, message="Payload created")
+
+    assert set(created.model_dump()) == {"id", "created", "message"}
 
 
 def test_error_response_serialises_detail() -> None:
