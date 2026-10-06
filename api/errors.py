@@ -49,9 +49,9 @@ async def _unexpected_handler(request: Request, error: Exception) -> JSONRespons
 
 
 def _describe(item: ErrorDetails) -> str:
-    location = ".".join(str(part) for part in item["loc"][1:]) or str(item["loc"][0])
+    location = ".".join(str(part) for part in item["loc"][1:])
     message = item["msg"].removeprefix("Value error, ")
-    return f"{location}: {message}"
+    return f"{location}: {message}" if location else message
 
 
 def _log(level: int, request: Request, status: int, detail: str, error: Exception | None) -> None:
